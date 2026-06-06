@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.dsqrwym.localload.engine.config.LoadTestConfig
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
+import org.dsqrwym.localload.engine.metrics.MetricsCollector
 import org.dsqrwym.localload.engine.scheduler.Scheduler
 
 // Controller State Model
@@ -70,4 +71,8 @@ class LoadTestController(
     fun isRunning(): Boolean = engine != null
 
     fun getCurrentConfig(): LoadTestConfig? = currentConfig
+
+    fun metricsCollector(): MetricsCollector? {
+        return engine?.metricsCollector()
+    }
 }

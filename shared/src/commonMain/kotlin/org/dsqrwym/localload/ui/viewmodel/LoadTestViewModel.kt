@@ -12,7 +12,6 @@ import org.dsqrwym.localload.engine.LoadTestController
 import org.dsqrwym.localload.engine.config.LoadTestConfig
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.metrics.TestReport
-import org.dsqrwym.localload.engine.rate.RateFunctionSpec
 import kotlin.time.Duration.Companion.seconds
 
 data class LoadTestUiState(
@@ -58,8 +57,7 @@ class LoadTestViewModel(
         val config = LoadTestConfig(
             url = url,
             durationMs = 30_000,
-            concurrency = 400,
-            rate = RateFunctionSpec.Constant(rps = 1000.0),
+            concurrency = 500,
         )
 
         _state.value = _state.value.copy(

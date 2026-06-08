@@ -1,9 +1,10 @@
 package org.dsqrwym.localload.engine
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.dsqrwym.localload.engine.config.LoadTestConfig
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
@@ -22,7 +23,7 @@ class LoadTestController(
     private val scheduler: Scheduler,
     private val executor: KtorExecutor
 ) {
-
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var engine: LoadTestEngine? = null
     private var currentConfig: LoadTestConfig? = null
 
@@ -56,15 +57,16 @@ class LoadTestController(
     // STOP TEST
     fun stop() {
         val e = engine ?: return
-
         _state.value = ControllerState.Stopping
-
         e.stop()
 
-        engine = null
-        currentConfig = null
-
-        _state.value = ControllerState.Idle
+        // 监听 engine 的彻底关闭 - 绑定到类成员 scope
+        scope.launch {
+            e.isStopped.first { it } // 等待第一个为 true 的值
+            _state.value = ControllerState.Idle
+            engine = null
+            currentConfig = null
+        }
     }
 
     // STATUS

@@ -4,7 +4,7 @@ import io.ktor.http.*
 import kotlin.time.Clock
 
 data class RequestResult(
-    val requestId: String,
+    val requestId: Long,
 
     val success: Boolean,
     val httpStatus: HttpStatusCode?,

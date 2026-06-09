@@ -17,18 +17,16 @@ import org.dsqrwym.localload.util.AppDispatchers
 import org.dsqrwym.localload.util.TaskIdGenerator
 import kotlin.concurrent.Volatile
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class LoadTestEngine(
     private val config: LoadTestConfig,
     private val scheduler: Scheduler,
     executor: KtorExecutor
 ) {
-    private val scope =
-        CoroutineScope(
-            SupervisorJob() + AppDispatchers.IO
-        )
-
+    private val scope = CoroutineScope(SupervisorJob() + AppDispatchers.IO)
     private val metricsCollector = MetricsCollector()
+    private var metricsTickerJob: Job? = null
 
     private val _isStopped = MutableStateFlow(false)
     val isStopped: StateFlow<Boolean> = _isStopped.asStateFlow()
@@ -53,11 +51,7 @@ class LoadTestEngine(
     /**
      * Engine统一结果总线
      */
-    private val resultFlow =
-        MutableSharedFlow<RequestResult>(
-            replay = 0,
-            extraBufferCapacity = 1024
-        )
+    private val resultFlow = MutableSharedFlow<RequestResult>(replay = 0, extraBufferCapacity = 1024)
 
     @Volatile
     private var running = false
@@ -68,7 +62,6 @@ class LoadTestEngine(
 
     fun start() {
         if (running) return
-
         running = true
 
         workerPool.start()
@@ -77,7 +70,7 @@ class LoadTestEngine(
         }
 
         startResultCollector()
-
+        startMetricsTicker()
         startAutoStop()
     }
 
@@ -90,9 +83,11 @@ class LoadTestEngine(
 
         schedulerJob?.cancel()
         resultCollectorJob?.cancel()
+        metricsTickerJob?.cancel()
         autoStopJob?.cancel()
 
         scope.launch {
+            metricsCollector.flush()
             workerPool.shutdown()
             _isStopped.value = true // 通知外部：清理工作已完成
             scope.cancel()
@@ -103,9 +98,7 @@ class LoadTestEngine(
         return resultFlow.asSharedFlow()
     }
 
-    fun metricsCollector(): MetricsCollector {
-        return metricsCollector
-    }
+    fun metricsCollector(): MetricsCollector = metricsCollector
 
     /**
      * Scheduler -> WorkerPool
@@ -143,5 +136,15 @@ class LoadTestEngine(
             delay(config.durationMs.milliseconds)
             stop()
         }
+    }
+
+    private fun startMetricsTicker() {
+        metricsTickerJob =
+            scope.launch {
+                while (running) {
+                    delay(1.seconds)
+                    metricsCollector.tick()
+                }
+            }
     }
 }

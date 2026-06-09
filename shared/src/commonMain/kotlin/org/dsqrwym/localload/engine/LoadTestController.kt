@@ -9,14 +9,15 @@ import org.dsqrwym.localload.engine.config.LoadTestConfig
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.metrics.MetricsCollector
+import org.dsqrwym.localload.engine.metrics.TestReport
 import org.dsqrwym.localload.engine.scheduler.Scheduler
 
 // Controller State Model
-sealed class ControllerState {
-    object Idle : ControllerState()
-    object Starting : ControllerState()
-    object Running : ControllerState()
-    object Stopping : ControllerState()
+enum class ControllerState {
+    Idle,
+    Starting,
+    Running,
+    Stopping
 }
 
 class LoadTestController(
@@ -26,6 +27,8 @@ class LoadTestController(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var engine: LoadTestEngine? = null
     private var currentConfig: LoadTestConfig? = null
+    var lastReport: TestReport? = null
+        private set
 
     private val _state = MutableStateFlow<ControllerState>(ControllerState.Idle)
     val state: StateFlow<ControllerState> = _state.asStateFlow()
@@ -46,11 +49,19 @@ class LoadTestController(
 
         engine = newEngine
         currentConfig = config
+        lastReport = null
 
         newEngine.start()
 
-        _state.value = ControllerState.Running
+        scope.launch {
+            newEngine.isStopped.first { it }
+            lastReport = newEngine.metricsCollector().buildReport()
+            engine = null
+            currentConfig = null
+            _state.value = ControllerState.Idle
+        }
 
+        _state.value = ControllerState.Running
         return newEngine.results()
     }
 
@@ -59,14 +70,6 @@ class LoadTestController(
         val e = engine ?: return
         _state.value = ControllerState.Stopping
         e.stop()
-
-        // 监听 engine 的彻底关闭 - 绑定到类成员 scope
-        scope.launch {
-            e.isStopped.first { it } // 等待第一个为 true 的值
-            _state.value = ControllerState.Idle
-            engine = null
-            currentConfig = null
-        }
     }
 
     // STATUS

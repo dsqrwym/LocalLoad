@@ -16,7 +16,7 @@ import org.dsqrwym.localload.util.roundToDisplay
 fun LoadTestScreen(
     viewModel: LoadTestViewModel
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     val report by viewModel.report.collectAsState()
 
     LazyColumn(

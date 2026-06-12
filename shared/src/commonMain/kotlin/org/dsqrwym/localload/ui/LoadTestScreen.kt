@@ -1,13 +1,18 @@
 package org.dsqrwym.localload.ui
 
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.composefluent.component.Button
+import io.github.composefluent.component.Text
+import io.github.composefluent.component.TextField
 import org.dsqrwym.localload.engine.metrics.TestReport
 import org.dsqrwym.localload.ui.viewmodel.LoadTestViewModel
 import org.dsqrwym.localload.util.roundToDisplay
@@ -39,7 +44,7 @@ fun LoadTestScreen(
             Row {
                 Button(
                     onClick = { viewModel.startTest() },
-                    enabled = !state.isRunning
+                    disabled = state.isRunning
                 ) {
                     Text("Start")
                 }
@@ -48,7 +53,7 @@ fun LoadTestScreen(
 
                 Button(
                     onClick = { viewModel.stopTest() },
-                    enabled = state.isRunning
+                    disabled = state.isRunning
                 ) {
                     Text("Stop")
                 }
@@ -144,10 +149,7 @@ private fun ReportCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = title)
 
             HorizontalDivider()
 
@@ -169,10 +171,7 @@ fun ReportScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Text(
-            text = "Test Report",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text(text = "Test Report",)
 
         Spacer(Modifier.height(8.dp))
 

@@ -1,4 +1,4 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 data class HttpConfig(
     val version: HttpVersion = HttpVersion.AUTO,

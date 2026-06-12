@@ -1,10 +1,9 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 import io.ktor.client.*
 import io.ktor.client.engine.js.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import org.dsqrwym.localload.engine.http.HttpProviderCapabilities
 
 actual class HttpProvider actual constructor(val httpConfig: HttpConfig) {
     actual val capabilities: HttpProviderCapabilities = object : HttpProviderCapabilities {

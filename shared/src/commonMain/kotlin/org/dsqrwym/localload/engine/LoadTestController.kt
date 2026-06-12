@@ -6,7 +6,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.dsqrwym.localload.engine.config.LoadTestConfig
-import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.metrics.MetricsCollector
 import org.dsqrwym.localload.engine.metrics.TestReport
@@ -22,7 +21,6 @@ enum class ControllerState {
 
 class LoadTestController(
     private val scheduler: Scheduler,
-    private val executor: KtorExecutor
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var engine: LoadTestEngine? = null
@@ -30,7 +28,7 @@ class LoadTestController(
     var lastReport: TestReport? = null
         private set
 
-    private val _state = MutableStateFlow<ControllerState>(ControllerState.Idle)
+    private val _state = MutableStateFlow(ControllerState.Idle)
     val state: StateFlow<ControllerState> = _state.asStateFlow()
 
     // START TEST
@@ -44,7 +42,6 @@ class LoadTestController(
         val newEngine = LoadTestEngine(
             config = config,
             scheduler = scheduler,
-            executor = executor
         )
 
         engine = newEngine

@@ -7,6 +7,7 @@ import org.dsqrwym.localload.engine.config.WorkerPoolMode
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.execution.RequestTask
+import org.dsqrwym.localload.engine.http.HttpProvider
 import org.dsqrwym.localload.engine.metrics.MetricsCollector
 import org.dsqrwym.localload.engine.runtime.QueueWorkerPool
 import org.dsqrwym.localload.engine.runtime.QueueWorkerPoolImpl
@@ -22,10 +23,13 @@ import kotlin.time.Duration.Companion.seconds
 class LoadTestEngine(
     private val config: LoadTestConfig,
     private val scheduler: Scheduler,
-    executor: KtorExecutor
 ) {
     private val scope = CoroutineScope(SupervisorJob() + AppDispatchers.IO)
     private val metricsCollector = MetricsCollector()
+    private val executor = KtorExecutor(
+        client = HttpProvider(config.http).client,
+        recorder = metricsCollector
+    )
     private var metricsTickerJob: Job? = null
 
     private val _isStopped = MutableStateFlow(false)
@@ -69,7 +73,6 @@ class LoadTestEngine(
             startScheduler()
         }
 
-        startResultCollector()
         startMetricsTicker()
         startAutoStop()
     }
@@ -117,19 +120,6 @@ class LoadTestEngine(
         }
     }
 
-    /**
-     * WorkerPool -> Metrics + SharedFlow
-     */
-    private fun startResultCollector() {
-        resultCollectorJob = scope.launch {
-            workerPool
-                .results()
-                .collect { result ->
-                    metricsCollector.record(result)
-                    resultFlow.emit(result)
-                }
-        }
-    }
 
     private fun startAutoStop() {
         autoStopJob = scope.launch {

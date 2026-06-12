@@ -73,7 +73,9 @@ kotlin {
             //Ktor
             implementation(libs.ktor.client.core)
             //Kotlinx DateTime
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0")
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.fluent)
+            implementation(libs.fluent.icons.extended)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

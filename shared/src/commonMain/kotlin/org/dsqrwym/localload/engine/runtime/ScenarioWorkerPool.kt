@@ -2,8 +2,7 @@ package org.dsqrwym.localload.engine.runtime
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
+import org.dsqrwym.localload.engine.config.EngineConstants
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.execution.RequestTask
@@ -19,24 +18,22 @@ class ScenarioWorkerPool(
     private val concurrency: Int,
     private val scope: CoroutineScope,
     private val taskFactory: () -> RequestTask
-): WorkerPool {
+) : WorkerPool {
     private val workers = mutableListOf<Job>()
     private val resultChannel = Channel<RequestResult>(Channel.BUFFERED)
 
     override fun start() {
         repeat(concurrency) {
+            val buffer = ByteArray(EngineConstants.IO_BUFFER_SIZE_BYTES)
             workers.add(scope.launch(AppDispatchers.IO) {
                 // 自驱动模型：循环执行直到作用域取消
                 while (isActive) {
                     val task = taskFactory()
-                    val result = executor.execute(task)
-                    resultChannel.send(result)
+                    executor.execute(task, buffer)
                 }
             })
         }
     }
-
-    override fun results(): Flow<RequestResult> = resultChannel.receiveAsFlow()
 
     override suspend fun shutdown() {
         workers.forEach { it.cancelAndJoin() }

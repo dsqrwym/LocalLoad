@@ -4,11 +4,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import org.dsqrwym.localload.engine.config.EngineConstants
 import org.dsqrwym.localload.engine.execution.KtorExecutor
 import org.dsqrwym.localload.engine.execution.RequestResult
 import org.dsqrwym.localload.engine.execution.RequestTask
@@ -49,19 +48,20 @@ class QueueWorkerPoolImpl(
     override fun start() {
         repeat(workerCount) {
             val job = scope.launch(AppDispatchers.IO) {
-                workerLoop()
+                // 循环外创建 属于每个 worker 的 buffer
+                val buffer = ByteArray(EngineConstants.IO_BUFFER_SIZE_BYTES)
+                workerLoop(buffer)
             }
             workers.add(job)
         }
     }
 
     // Worker 主循环
-    private suspend fun workerLoop() {
+    private suspend fun workerLoop(buffer: ByteArray) {
         for (task in taskChannel) {
             // 获取许可去运行，没许可会直接挂起等待
             semaphore.withPermit {
-                val result = executor.execute(task)
-                resultChannel.send(result)
+                executor.execute(task, buffer)
             }
         }
     }
@@ -70,9 +70,6 @@ class QueueWorkerPoolImpl(
     override suspend fun submit(task: RequestTask) {
         taskChannel.send(task)
     }
-
-    // 输出结果流
-    override fun results(): Flow<RequestResult> = resultChannel.receiveAsFlow()
 
     // 停止
     override suspend fun shutdown() {

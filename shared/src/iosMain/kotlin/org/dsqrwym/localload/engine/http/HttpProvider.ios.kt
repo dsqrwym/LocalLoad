@@ -1,8 +1,7 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 import io.ktor.client.*
 import io.ktor.client.engine.darwin.*
-import org.dsqrwym.localload.engine.http.HttpProviderCapabilities
 import platform.Foundation.NSURLRequestReloadIgnoringLocalCacheData
 
 actual class HttpProvider actual constructor(val httpConfig: HttpConfig) {

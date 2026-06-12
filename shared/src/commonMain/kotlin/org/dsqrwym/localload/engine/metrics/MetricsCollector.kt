@@ -1,11 +1,12 @@
 package org.dsqrwym.localload.engine.metrics
 
+import io.ktor.http.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.dsqrwym.localload.engine.execution.RequestResult
+import org.dsqrwym.localload.engine.execution.ExecutionRecorder
 import kotlin.math.sqrt
 
-class MetricsCollector {
+class MetricsCollector: ExecutionRecorder {
     private val mutex = Mutex()
 
     private var totalRequests = 0L
@@ -21,17 +22,25 @@ class MetricsCollector {
     private val secondBuckets = mutableListOf<Long>()
     private var currentSecondCount = 0L
 
-    suspend fun record(result: RequestResult) {
+    override suspend fun record(
+        latencyMs: Long,
+        success: Boolean,
+        statusCode: HttpStatusCode?,
+        bytesRead: Long
+    ) {
         mutex.withLock {
             totalRequests++
-            if (result.success) {
+
+            if (success) {
                 successCount++
             } else {
                 errorCount++
             }
-            val latency = result.latencyMs
-            latencies.add(latency)
-            updateVariance(latency.toDouble())
+
+            latencies.add(latencyMs)
+
+            updateVariance(latencyMs.toDouble())
+
             currentSecondCount++
         }
     }

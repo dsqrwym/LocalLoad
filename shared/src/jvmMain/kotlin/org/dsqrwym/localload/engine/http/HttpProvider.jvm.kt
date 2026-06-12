@@ -1,12 +1,11 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import okhttp3.Dispatcher
 import okhttp3.Protocol
-import org.dsqrwym.localload.engine.http.HttpProviderCapabilities
 
-actual class HttpProvider actual constructor(private val httpConfig: HttpConfig) {
+actual class HttpProvider actual constructor(val httpConfig: HttpConfig) {
     actual val capabilities: HttpProviderCapabilities = object : HttpProviderCapabilities {
         override val supportsKeepAlive: Boolean = true
         override val supportsCompressionControl: Boolean = true
@@ -14,7 +13,7 @@ actual class HttpProvider actual constructor(private val httpConfig: HttpConfig)
     }
 
     actual val client: HttpClient = HttpClient(OkHttp) {
-       installCommonConfig(httpConfig)
+        installCommonConfig(httpConfig)
 
         engine {
             config {

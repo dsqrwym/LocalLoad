@@ -1,8 +1,7 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 import io.ktor.client.*
 import io.ktor.client.plugins.*
-import org.dsqrwym.localload.engine.http.HttpProviderCapabilities
 
 expect class HttpProvider(httpConfig: HttpConfig) {
     val capabilities: HttpProviderCapabilities

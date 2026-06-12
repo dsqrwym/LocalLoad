@@ -1,7 +1,7 @@
 package org.dsqrwym.localload.engine.config
 
 import io.ktor.http.*
-import org.dsqrwym.localload.engine.http.executor.HttpConfig
+import org.dsqrwym.localload.engine.http.HttpConfig
 import org.dsqrwym.localload.engine.rate.RateFunctionSpec
 
 enum class WorkerPoolMode {

@@ -1,10 +1,9 @@
-package org.dsqrwym.localload.engine.http.executor
+package org.dsqrwym.localload.engine.http
 
 import io.ktor.client.*
 import io.ktor.client.engine.js.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
-import org.dsqrwym.localload.engine.http.HttpProviderCapabilities
 
 actual class HttpProvider actual constructor(val httpConfig: HttpConfig) {
     actual val capabilities: HttpProviderCapabilities = object : HttpProviderCapabilities {
@@ -14,7 +13,7 @@ actual class HttpProvider actual constructor(val httpConfig: HttpConfig) {
     }
 
     actual val client: HttpClient = HttpClient(Js) {
-      installCommonConfig(httpConfig)
+        installCommonConfig(httpConfig)
         defaultRequest {
             // 强制浏览器不读取缓存，也不写入缓存
             header("Cache-Control", "no-store, no-cache, must-revalidate")
